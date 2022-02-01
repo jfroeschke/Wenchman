@@ -48,13 +48,86 @@ leaflet(starec2.coords) %>%
 #####################
 ##### merge starec2 with bgsrec
 
-## subset to wenchman first
+## subset to wenchman  and butter fishfirst
+##peprilus burti ## butterfish
+##Pristipomoides aquilonaris ## wenchman
 
-
+### get species codes from bgsrec
+Species <- data.frame(unique(bgsrec$SPEC_BGS))
+Species2 <- Species[order(Species$unique.bgsrec.SPEC_BGS.), ]
+Species2 <- data.frame(Species2)
 ### BGSREC to wide then merge?
+
+
+## SUBSET TO AQUILO & BURTI
+#df <- subset(bgsrec, SPEC_BGS=="AQUILO" | SPEC_BGS=="BURTI")
+df <- subset(bgsrec, SPEC_BGS=="AQUILO" )
+### merge df with starec2
+df2 <- merge(starec2, df, by=c("CRUISEID","STATIONID", "CRUISE_NO"),
+            all=TRUE)
+
+
+
 # 
-# library(reshape2)
-# fin2 <- dcast(fin1, unique + GEARS +
+ library(reshape2)
+df3 <- dcast(df2, CRUISEID + STATIONID + CRUISE_NO + lat + long  + START_DATE +
+               END_DATE + DEPTH_ESTA + GEARS + TEMP_BOT + TEMP_SSURF + 
+               TEMP_SAIR + VESSEL_SPD + FAUN_ZONE + STAT_ZONE +
+               year + month + HAULVALUE
+             ~ SPEC_BGS, 
+             sum, value.var="CNT", fill=0)
+
+df4 <-  df3[!(is.na(df3$lat)),]
+
+
+POS <- subset(df4, AQUILO > 0)
+NEG <- subset(df4, AQUILO == 0)
+
+##############map the POS data
+
+
+POS.coords <- data.frame(x=POS$lon, y=POS$lat)
+coordinates(POS.coords) <- ~ x + y
+class(POS.coords)
+### Assign albers projection
+proj4string(POS.coords)  <- CRS("+proj=longlat +datum=WGS84")  ## for example
+plot(POS.coords, axes=TRUE) ## sanity check
+
+NEG.coords <- data.frame(x=NEG$lon, y=NEG$lat)
+coordinates(NEG.coords) <- ~ x + y
+class(NEG.coords)
+### Assign albers projection
+proj4string(NEG.coords)  <- CRS("+proj=longlat +datum=WGS84")  ## for example
+plot(NEG.coords, axes=TRUE) ## sanity check
+
+
+library(leaflet)
+leaflet(POS.coords) %>% 
+  addTiles('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+           options = providerTileOptions(noWrap = TRUE)) %>%
+  addTiles('http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/Mapserver/tile/{z}/{y}/{x}',
+           options = providerTileOptions(noWrap = TRUE)) %>% 
+  addCircleMarkers(color = "#FFFF00", radius=3)
+
+
+leaflet() %>% 
+  addTiles('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+           options = providerTileOptions(noWrap = TRUE)) %>%
+  addTiles('http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/Mapserver/tile/{z}/{y}/{x}',
+           options = providerTileOptions(noWrap = TRUE)) %>% 
+  addCircleMarkers(data=NEG.coords,color = "#9370DB", radius=1, group="Zero") %>% 
+  addCircleMarkers(data=POS.coords,color = "#FFFF00", radius=3, group="Wenchmen") %>% 
+  addLayersControl(
+    overlayGroups = c("Wenchmen", "Zero"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+
+
+
+
+################### Not used###########################
+             
+             unique + GEARS +
 #                 DECSLAT + DECSLON +
 #                 DEPTH_ESTA +
 #                 TIME_EMIL +
