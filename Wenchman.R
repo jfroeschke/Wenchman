@@ -118,10 +118,13 @@ leaflet() %>%
   addCircleMarkers(data=NEG.coords,color = "#9370DB", radius=1, group="Zero") %>% 
   addCircleMarkers(data=POS.coords,color = "#FFFF00", radius=3, group="Wenchmen") %>% 
   addLayersControl(
-    overlayGroups = c("Wenchmen", "Zero"),
+    overlayGroups = c("Wenchman", "Zero"),
     options = layersControlOptions(collapsed = FALSE)
   )
 
+
+
+save.image("Wenchman.RData")
 
 
 
