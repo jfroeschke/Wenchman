@@ -76,6 +76,23 @@ df3 <- dcast(df2, CRUISEID + STATIONID + CRUISE_NO + lat + long  + START_DATE +
                year + month + HAULVALUE
              ~ SPEC_BGS, 
              sum, value.var="CNT", fill=0)
+
+df3CNTEXP <- dcast(df2, CRUISEID + STATIONID + CRUISE_NO + lat + long  + START_DATE +
+               END_DATE + DEPTH_ESTA + GEARS + TEMP_BOT + TEMP_SSURF + 
+               TEMP_SAIR + VESSEL_SPD + FAUN_ZONE + STAT_ZONE +
+               year + month + HAULVALUE 
+             ~ SPEC_BGS, 
+             sum, value.var="CNTEXP", fill=0)
+
+##change name of Burti and Aquilo to merge
+colnames(df3CNTEXP)[colnames(df3CNTEXP) == "AQUILO"] <- "AQUILO_EXP"
+colnames(df3CNTEXP)[colnames(df3CNTEXP) == "BURTI"] <- "BURTI_EXP"
+df3Merge <- merge(df3, df3CNTEXP, all.x=TRUE)
+
+plot(BURTI_EXP ~ BURTI, data = df3Merge)
+
+plot(AQUILO_EXP ~ AQUILO, data = df3Merge)
+df3 <- df3Merge
 ## Remove NA's
 df4 <-  df3[!(is.na(df3$lat)),]
 
@@ -216,7 +233,7 @@ library(rgdal)
 df4sp <- SpatialPointsDataFrame(df4.coords, data=df4)
 ### Export object for backup.  Will need to test percent of points in final polygon
 writeOGR( df4sp, layer="level",
-          "C:/Users/JohnF/OneDrive - Gulf of Mexico Fishery Mgmt Council/Documents/SEAMAP/shapefile/SEAMAP.shp",
+          "C:/Users/JohnF/OneDrive - Gulf of Mexico Fishery Mgmt Council/Documents/SEAMAP/shapefile/SEAMAP2.shp",
           driver="ESRI Shapefile",
           overwrite_layer=TRUE)
 
